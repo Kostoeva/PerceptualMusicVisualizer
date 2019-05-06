@@ -1,21 +1,24 @@
 package com.example.perceptualmusicvisualizer;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.audiofx.Visualizer;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /*
- * Copy test.mp3 to /res/raw/ folder
- *
  * needed in AndroidManifest.xml
  * android:minSdkVersion="9"
  * uses-permission of "android.permission.RECORD_AUDIO"
  *
- * reference: Android demo example -
- * ApiDemos > Media > AudioTx
  */
 
 public class MainActivity extends AppCompatActivity {
@@ -46,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initAudio() {
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
-        mMediaPlayer = MediaPlayer.create(this, R.raw.test1);
+        mMediaPlayer = MediaPlayer.create(this, R.raw.elvis);
 
         setupVisualizerFxAndUI();
 
@@ -84,6 +87,48 @@ public class MainActivity extends AppCompatActivity {
                         mVisualizerView.updateVisualizerFFT(bytes);
                     }
                 }, Visualizer.getMaxCaptureRate() / 2, false, true);
+    }
+
+    List<String> permissions = new ArrayList<String>();
+
+    private boolean askPermission() {
+
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+            int RECORD_AUDIO = checkSelfPermission(Manifest.permission.RECORD_AUDIO );
+
+            if (RECORD_AUDIO != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.RECORD_AUDIO);
+            }
+
+
+            if (!permissions.isEmpty()) {
+                requestPermissions(permissions.toArray(new String[permissions.size()]), 1);
+            } else
+                return false;
+        } else
+            return false;
+        return true;
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == 1) {
+
+            boolean result = true;
+            for (int i = 0; i < permissions.length; i++) {
+                result = result && grantResults[i] == PackageManager.PERMISSION_GRANTED;
+            }
+            if (!result) {
+
+                Toast.makeText(this, "..", Toast.LENGTH_LONG).show();
+                askPermission();
+            } else {
+            }
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
 }
